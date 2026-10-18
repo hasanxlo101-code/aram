@@ -1,0 +1,6 @@
+{
+  "name": "KAyA_SafeSec | أكاديمية كايا للأمن والحماية الرقمية",
+  "description": "أكاديمية كايا للأمن والحماية الرقمية KAyA_SafeSec: دورات ومختبرات تفاعلية متقدمة في أمن الشبكات، الاختراق الأخلاقي، الأدلة الجنائية، وأمن الذكاء الاصطناعي.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

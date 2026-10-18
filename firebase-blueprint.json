@@ -1,0 +1,83 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Registered academy student or administrator profile",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string", "maxLength": 100 },
+        "role": { "type": "string", "enum": ["student", "admin"] },
+        "xp": { "type": "number" },
+        "level": { "type": "string", "maxLength": 50 },
+        "badges": { "type": "array" },
+        "enrolledCourses": { "type": "array" },
+        "completedCourses": { "type": "array" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "email", "role"]
+    },
+    "Course": {
+      "title": "Course",
+      "description": "Cybersecurity course and Word curriculum data",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string", "maxLength": 200 },
+        "level": { "type": "string", "enum": ["beginner", "intermediate", "expert"] },
+        "price": { "type": "number" },
+        "isFree": { "type": "boolean" },
+        "description": { "type": "string", "maxLength": 1000 },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "title", "level"]
+    },
+    "LabProgress": {
+      "title": "LabProgress",
+      "description": "User progress and completion inside practical cybersecurity labs",
+      "type": "object",
+      "properties": {
+        "labId": { "type": "string" },
+        "userId": { "type": "string" },
+        "completed": { "type": "boolean" },
+        "score": { "type": "number" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["labId", "userId", "completed"]
+    },
+    "ScanReport": {
+      "title": "ScanReport",
+      "description": "Audit record of URL scanning, breach check, or phone intelligence check",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "scanType": { "type": "string", "enum": ["url", "email_breach", "phone_osint", "simulator"] },
+        "target": { "type": "string", "maxLength": 300 },
+        "verdict": { "type": "string", "maxLength": 100 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "scanType", "target", "verdict"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Student and admin profiles"
+    },
+    "/courses/{courseId}": {
+      "schema": "Course",
+      "description": "Academy course catalog and curriculum data"
+    },
+    "/users/{userId}/labProgress/{labId}": {
+      "schema": "LabProgress",
+      "description": "Per-user lab progress and simulator flags"
+    },
+    "/users/{userId}/scans/{scanId}": {
+      "schema": "ScanReport",
+      "description": "Per-user cybersecurity scan and threat inspection history"
+    }
+  }
+}

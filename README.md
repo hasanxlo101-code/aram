@@ -1,11 +1,57 @@
-<div align="center">
+# KAyA Safe&Sec Academy | أكاديمية كايا للأمن والحماية الرقمية
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+منصة عربية متخصصة في التعليم العملي للأمن السيبراني، تحليل مراكز العمليات SOC، أمن تطبيقات الويب، التحقيقات الجنائية الرقمية DFIR، استخبارات المصادر المفتوحة OSINT، وأمن الذكاء الاصطناعي.
 
-  <h1>Built with AI Studio</h2>
+---
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+## 🚀 التشغيل السريع (Quick Start)
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+### المتطلبات المسبقة (Prerequisites)
+- Node.js 18+ أو 20+
+- npm أو bun أو yarn
 
-</div>
+### خطوات التثبيت والتشغيل المحلي
+```bash
+# 1. تثبيت الحزم والمكتبات
+npm install
+
+# 2. تشغيل خادم التطوير
+npm run dev
+```
+
+افتح المتصفح على: `http://localhost:3000`
+
+---
+
+## 📁 هيكلية المجلدات الرئيسية (Project Structure)
+
+```
+.
+├── src/
+│   ├── components/
+│   │   ├── academy/          # المسارات الاحترافية الستة والمختبرات الموحدة
+│   │   ├── courses/          # مقررات Word الـ 15 وعارض المستندات
+│   │   ├── credentials/      # مصفوفة المهارات الرقمية ونظام الشهادات
+│   │   ├── dashboard/        # لوحة المتدرب ونقاط الخبرة XP
+│   │   ├── labs/             # محاكي الهجمات ومختبرات الـ Terminal
+│   │   ├── library/          # مكتبة الوثائق الفنية وخطط الطوارئ
+│   │   ├── projects/         # مشاريع التخرج النهائية ونماذج التقارير
+│   │   └── security/         # درع الحماية وفاحص التهديدات
+│   ├── data/                 # قواعد بيانات المسارات، الأسئلة، والمختبرات
+│   ├── types/                # واجهات TypeScript المعيارية
+│   └── utils/                # محرك الفحص الأمني والأدوات المساعدة
+├── public/                   # الملفات الثابتة، الصور، وحزم التحميل ZIP
+├── server.ts                 # خادم Express والوسائط المتعددة
+├── firestore.rules           # قواعد حماية قاعدة بيانات Firestore
+├── index.html                # نقطة الدخول ووسوم SEO و OpenGraph
+└── package.json              # تبعيات المشروع
+```
+
+---
+
+## 🔒 الإدارة والاعتمادات
+- **المؤسس والمشرف الأكاديمي:** مهندس الأمن السيبراني حسن نبيل خلو (Hassan Nabil Khalu)
+- **البريد الرسمي:** hasan.xlo101@gmail.com
+- **حساب ومستودع GitHub الرسمي:** https://github.com/aramkaya295-cyber/
+- **الرابط الرئيسي:** https://tinyurl.com/kaya-safesec
+- **الرابط الأكاديمي:** https://tinyurl.com/kaya-academy
