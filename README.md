@@ -52,6 +52,4 @@ npm run dev
 ## 🔒 الإدارة والاعتمادات
 - **المؤسس والمشرف الأكاديمي:** مهندس الأمن السيبراني حسن نبيل خلو (Hassan Nabil Khalu)
 - **البريد الرسمي:** hasan.xlo101@gmail.com
-- **حساب ومستودع GitHub الرسمي:** https://github.com/aramkaya295-cyber/
-- **الرابط الرئيسي:** https://tinyurl.com/kaya-safesec
-- **الرابط الأكاديمي:** https://tinyurl.com/kaya-academy
+- **الرابط الرسمي:** https://tinyurl.com/kaya-safesec
