@@ -8,13 +8,13 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn() && (
-        request.auth.token.email == 'hasanxlo101@gmail.com' ||
-        request.auth.token.email == 'hasan.xlo101@gmail.com'
+        request.auth.token.email == 'hasan.xlo101@gmail.com' &&
+        request.auth.token.email_verified == true
       );
     }
 
     function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+      return isSignedIn() && request.auth.token.email_verified == true && request.auth.uid == userId;
     }
 
     function isValidId(id) {
@@ -31,8 +31,12 @@ service cloud.firestore {
     match /users/{userId} {
       allow get: if (isOwner(userId) || isAdmin()) && isValidId(userId);
       allow list: if isAdmin();
-      allow create: if (isOwner(userId) || isAdmin()) && isValidId(userId);
-      allow update: if (isOwner(userId) || isAdmin()) && isValidId(userId);
+      allow create: if isValidId(userId) && (
+        (isOwner(userId) && request.resource.data.role != 'admin') || isAdmin()
+      );
+      allow update: if isValidId(userId) && (
+        (isOwner(userId) && request.resource.data.role == resource.data.role && request.resource.data.role != 'admin') || isAdmin()
+      );
       allow delete: if isAdmin() && isValidId(userId);
 
       // Sub-collections: Lab Progress
@@ -50,9 +54,9 @@ service cloud.firestore {
       }
     }
 
-    // Test connection check document
-    match /test/connection {
-      allow read: if true;
+    // Explicit deny for any document not covered by the rules above.
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { auth } from '../../lib/firebase';
 import { X, Lock, ShieldCheck, AlertCircle, Key, User } from 'lucide-react';
 
 interface AdminLoginModalProps {
@@ -12,25 +14,39 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
   onClose,
   onLoginSuccess,
 }) => {
-  const [email, setEmail] = useState('hasanxlo101@gmail.com');
+  const [email, setEmail] = useState('hasan.xlo101@gmail.com');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [showPass, setShowPass] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanEmail = email.trim().toLowerCase();
-    const cleanPass = password.trim();
+    if (!cleanEmail || !password) {
+      setErrorMsg('أدخل البريد الإلكتروني وكلمة المرور.');
+      return;
+    }
 
-    // Verification against user-specified credentials
-    if (cleanEmail === 'hasanxlo101@gmail.com' && cleanPass === 'feelings on pepar**429673') {
-      setErrorMsg('');
-      onLoginSuccess(cleanEmail);
+    setIsSubmitting(true);
+    setErrorMsg('');
+    try {
+      const credential = await signInWithEmailAndPassword(auth, cleanEmail, password);
+      const signedInEmail = credential.user.email?.toLowerCase() || '';
+      const allowedAdmins = ['hasan.xlo101@gmail.com'];
+      if (!allowedAdmins.includes(signedInEmail) || !credential.user.emailVerified) {
+        await signOut(auth);
+        throw new Error('ADMIN_NOT_AUTHORIZED');
+      }
+      onLoginSuccess(signedInEmail);
       onClose();
-    } else {
-      setErrorMsg('بيانات الدخول غير صحيحة. هذا القسم مخصص لمالك وأدمن الأكاديمية فقط.');
+    } catch (error) {
+      const code = error instanceof Error && error.message === 'ADMIN_NOT_AUTHORIZED' ? error.message : '';
+      setErrorMsg(code ? 'هذا الحساب غير مخوّل للإدارة أو لم يتم توثيق بريده الإلكتروني.' : 'تعذر تسجيل الدخول. تحقق من البيانات وإعدادات Firebase Authentication.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -65,8 +81,10 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
               <input
                 type="email"
                 value={email}
+                required
+                autoComplete="username"
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="hasanxlo101@gmail.com"
+                placeholder="hasan.xlo101@gmail.com"
                 dir="ltr"
                 className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2.5 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
               />
@@ -80,6 +98,8 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
               <input
                 type={showPass ? 'text' : 'password'}
                 value={password}
+                required
+                autoComplete="current-password"
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••••••"
                 dir="ltr"
@@ -105,9 +125,10 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
           <div className="pt-2">
             <button
               type="submit"
+              disabled={isSubmitting}
               className="w-full py-2.5 bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-bold text-xs rounded-lg transition-colors cursor-pointer shadow-lg shadow-emerald-500/10"
             >
-              دخول إلى لوحة إدارة الموقع
+              {isSubmitting ? 'جارٍ التحقق…' : 'دخول إلى لوحة إدارة الموقع'}
             </button>
           </div>
         </form>

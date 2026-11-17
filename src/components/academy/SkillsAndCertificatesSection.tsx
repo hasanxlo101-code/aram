@@ -50,8 +50,8 @@ export const SkillsAndCertificatesSection: React.FC<SkillsAndCertificatesSection
   };
 
   const handleVerifyCredential = () => {
-    setVerificationFeedback(` تم التحقق بنجاح! الشهادة رقم [${certCredentialId}] مسجلة وموثقة في سجلات KAyA Safe&Sec بتاريخ ${new Date().toLocaleDateString('ar-EG')}`);
-    setTimeout(() => setVerificationFeedback(null), 6000);
+    setVerificationFeedback('التحقق المباشر غير مفعّل في هذه النسخة. رقم الشهادة المعروض تجريبي ولا يُثبت إصدار شهادة أو اعتمادها. فعّل سجل الشهادات وقاعدة بيانات التحقق قبل استخدام هذه الميزة رسميًا.');
+    setTimeout(() => setVerificationFeedback(null), 8000);
   };
 
   return (
@@ -61,13 +61,13 @@ export const SkillsAndCertificatesSection: React.FC<SkillsAndCertificatesSection
         <div className="relative z-10 space-y-3 max-w-3xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
             <Award className="w-3.5 h-3.5" />
-            <span>مصفوفة المهارات والاعتمادات الرسمية</span>
+            <span>مصفوفة المهارات ونموذج الشهادات</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
-            خريطة الكفاءات والشهادات الرقمية الموثقة
+            خريطة المهارات ونماذج الشهادات الرقمية
           </h2>
           <p className="text-slate-300 text-sm leading-relaxed">
-            قياس كمي لمهاراتك في فروع الأمن السيبراني الستة وإصدار شهادات مهنية موثوقة برقم تحقق وطني ودولي بإشراف إدارة الأكاديمية.
+            مؤشرات تعلم تقديرية ونماذج شهادات للأغراض التعليمية. لا تُعد أرقام المهارات أو أرقام الشهادات إثباتًا مستقلًا للاعتماد أو التحقق.
           </p>
         </div>
       </div>
@@ -221,10 +221,10 @@ export const SkillsAndCertificatesSection: React.FC<SkillsAndCertificatesSection
 
                 {/* Academic Seal */}
                 <div className="space-y-1 text-center">
-                  <div className="text-emerald-400 font-bold text-xs">معتمد رسمياً</div>
+                  <div className="text-emerald-400 font-bold text-xs">نموذج تجريبي</div>
                   <div className="w-24 h-0.5 bg-emerald-500/30 mx-auto"></div>
                   <div className="text-[11px] text-slate-200">{new Date().toLocaleDateString('ar-EG')}</div>
-                  <div className="text-[10px] text-slate-400">تاريخ منح الاعتماد</div>
+                  <div className="text-[10px] text-slate-400">تاريخ إنشاء النموذج</div>
                 </div>
               </div>
             </div>

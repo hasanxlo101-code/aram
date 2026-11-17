@@ -84,13 +84,13 @@ export const PaymentNoticeModal: React.FC<PaymentNoticeModalProps> = ({
         {/* Early-Bird Reservation Form */}
         <div className="space-y-3">
           <span className="text-xs font-semibold text-slate-200 block">
-            سجل اهتمامك الآن للحصول على خصم 30% وأولوية الدخول عند الإطلاق:
+            يمكن تفعيل التسجيل المسبق بعد ربط نموذج آمن بخادم الأكاديمية:
           </span>
 
           {reservedSuccess ? (
             <div className="p-3 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-              <span>تم تسجيل حجزك بنجاح! سنرسل لك إشعاراً فور تفعيل بوابة الدفع الآمنة.</span>
+              <span>النموذج غير مربوط بخادم التسجيل حاليًا؛ لم يُحفظ بريدك ولم يتم إنشاء حجز.</span>
             </div>
           ) : (
             <form onSubmit={handleReserve} className="space-y-2.5">
@@ -106,7 +106,7 @@ export const PaymentNoticeModal: React.FC<PaymentNoticeModalProps> = ({
                 type="submit"
                 className="w-full py-2.5 rounded-lg bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-bold text-xs transition-colors cursor-pointer"
               >
-                تأكيد الحجز المسبق والتنبيه الفوري
+                نموذج اهتمام تجريبي غير مفعّل
               </button>
             </form>
           )}

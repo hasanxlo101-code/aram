@@ -92,8 +92,8 @@ export interface DownloadableDoc {
   title: string;
   category: 'دليل عملي' | 'قائمة تحقق' | 'ملخص أوامر' | 'إطار عمل' | 'تقرير نموذج';
   format: 'PDF' | 'DOCX' | 'MD' | 'JSON';
-  size: string;
-  downloadsCount: number;
+  size?: string;
+  downloadsCount?: number;
   description: string;
   tags: string[];
   fileUrl?: string;

@@ -74,22 +74,23 @@ export function handleFirestoreError(
 
 // Boot verification of connection to Firestore
 export async function testConnection(): Promise<boolean> {
+  // The old public test/connection document is intentionally no longer readable.
+  // Probe only the signed-in user's own profile, which follows the current rules.
+  const currentUser = auth.currentUser;
+  if (!currentUser || !currentUser.emailVerified) return false;
   try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
-    console.log('Firebase Firestore connection verified successfully.');
+    await getDocFromServer(doc(db, 'users', currentUser.uid));
+    console.log('Firebase Firestore connection verified for the signed-in user.');
     return true;
   } catch (error) {
     if (error instanceof Error && error.message.includes('the client is offline')) {
       console.warn('Firebase client is offline. Checking network configuration.');
     } else {
-      console.log('Firebase connection initialized:', (error as Error).message);
+      console.warn('Firebase profile probe failed:', error instanceof Error ? error.message : 'Unknown error');
     }
     return false;
   }
 }
-
-// Auto-run connection check on initial boot
-testConnection().catch((err) => console.log('Init check:', err));
 
 // Persist student profile & XP to Firestore
 export async function syncUserProfileToFirestore(
@@ -106,7 +107,9 @@ export async function syncUserProfileToFirestore(
         id: user.id,
         email: user.email,
         displayName: user.name,
-        role: user.email.includes('hasanxlo') || user.email.includes('hasan.xlo') ? 'admin' : 'student',
+        // Client-side profile writes must never grant administrative privileges.
+        // Admin authorization is derived from verified Firebase Auth claims/rules.
+        role: 'student',
         xp: xp,
         level: xp > 1500 ? 'خبير سيبراني' : xp > 500 ? 'متوسط دفاعي' : 'مبتدئ واعد',
         enrolledCourses: user.enrolledCourseIds || [],

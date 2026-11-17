@@ -15,6 +15,7 @@ import {
   Info
 } from 'lucide-react';
 import { WordCourse } from '../../types/wordCourses';
+import { createCourseDocxBlob, getCourseDocumentStats } from '../../utils/wordDocument';
 
 interface WordDocumentViewerModalProps {
   course: WordCourse | null;
@@ -34,50 +35,22 @@ export const WordDocumentViewerModal: React.FC<WordDocumentViewerModalProps> = (
   if (!isOpen || !course) return null;
 
   const handleDownloadDocx = () => {
-    // Generate text/markdown document formatted as Word content
-    let docxText = `========================================================================\n`;
-    docxText += `KAyA_SafeSec — أكاديمية كايا للأمن والحماية الرقمية\n`;
-    docxText += `Course Title: ${course.title}\n`;
-    docxText += `Level: ${course.levelLabelAr}\n`;
-    docxText += `Pages: ${course.docMeta.pages} | Words: ${course.docMeta.wordsCount}\n`;
-    docxText += `Author: ${course.docMeta.author}\n`;
-    docxText += `========================================================================\n\n`;
-
-    docxText += `[المقدمة والأهداف التعلمية]:\n`;
-    course.learningOutcomes.forEach((o, i) => {
-      docxText += `  ${i + 1}. ${o}\n`;
-    });
-    docxText += `\n------------------------------------------------------------------------\n\n`;
-
-    course.chapters.forEach((ch) => {
-      docxText += `الفصل ${ch.number}: ${ch.title}\n\n`;
-      ch.sections.forEach((sec) => {
-        docxText += `  ${sec.subtitle}\n`;
-        docxText += `  ${sec.content}\n`;
-        if (sec.codeOrBox) {
-          docxText += `\n  [أمر تطبيقي / مرجع فني]:\n  ${sec.codeOrBox}\n`;
-        }
-        if (sec.tip) {
-          docxText += `\n  [توجيه أمني]: ${sec.tip}\n`;
-        }
-        docxText += `\n`;
-      });
-      docxText += `------------------------------------------------------------------------\n\n`;
-    });
-
-    const blob = new Blob([docxText], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document;charset=utf-8' });
+    const blob = createCourseDocxBlob(course);
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = course.docMeta.fileName;
+    link.download = course.docMeta.fileName.toLowerCase().endsWith('.docx')
+      ? course.docMeta.fileName
+      : `${course.id}.docx`;
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1500);
     setDownloadSuccess(true);
-    setTimeout(() => setDownloadSuccess(false), 2500);
+    window.setTimeout(() => setDownloadSuccess(false), 2500);
   };
+
+  const documentStats = getCourseDocumentStats(course);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -106,9 +79,9 @@ export const WordDocumentViewerModal: React.FC<WordDocumentViewerModalProps> = (
               <div className="text-[11px] text-slate-400">
                 <span>{course.levelLabelAr}</span>
                 <span className="mx-1.5">·</span>
-                <span className="font-mono tabular-nums">{course.docMeta.pages} صفحة</span>
+                <span className="font-mono tabular-nums">{documentStats.pages} صفحة تقديرية</span>
                 <span className="mx-1.5">·</span>
-                <span className="font-mono tabular-nums">{course.docMeta.wordsCount} كلمة</span>
+                <span className="font-mono tabular-nums">{documentStats.words} كلمة</span>
               </div>
             </div>
           </div>
@@ -206,18 +179,20 @@ export const WordDocumentViewerModal: React.FC<WordDocumentViewerModalProps> = (
                 <span className="text-white font-bold tabular-nums">{course.hours} ساعة تدريب</span>
               </div>
               <div>
-                <span className="text-[11px] text-slate-500 block">عدد الصفحات</span>
-                <span className="text-white font-bold tabular-nums">{course.docMeta.pages} صفحة A4</span>
+                <span className="text-[11px] text-slate-500 block">الصفحات التقديرية</span>
+                <span className="text-white font-bold tabular-nums">{documentStats.pages} صفحة تقديرية A4</span>
               </div>
               <div>
-                <span className="text-[11px] text-slate-500 block">إجمالي الكلمات</span>
-                <span className="text-white font-bold tabular-nums">{course.docMeta.wordsCount} كلمة</span>
+                <span className="text-[11px] text-slate-500 block">كلمات المحتوى الفعلية</span>
+                <span className="text-white font-bold tabular-nums">{documentStats.words} كلمة</span>
               </div>
               <div>
                 <span className="text-[11px] text-slate-500 block">الصيغة المعتمدة</span>
                 <span className="text-emerald-400 font-bold">Word .docx</span>
               </div>
             </div>
+
+            <p className="text-xs text-slate-400 border border-slate-800 rounded-lg p-3">عدد الصفحات تقديري ويتغير حسب إعدادات Word والخط والهوامش. ملف التنزيل يحتوي على جميع الفصول والأقسام المعروضة في هذا المنهج.</p>
 
             {/* Learning Outcomes Section */}
             <div className="rounded-xl border border-emerald-500/20 bg-emerald-950/10 p-5 space-y-3">
@@ -290,7 +265,7 @@ export const WordDocumentViewerModal: React.FC<WordDocumentViewerModalProps> = (
             {/* Document Footer Signature */}
             <div className="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-slate-500">
               <div>وثيقة معتمدة ومحمية بموجب معايير أكاديمية KAyA_SafeSec للأمن الرقمي.</div>
-              <div className="text-emerald-400 font-bold">End of Document · Verified DOCX</div>
+              <div className="text-emerald-400 font-bold">End of Document · DOCX generated from full course content</div>
             </div>
           </div>
         </div>

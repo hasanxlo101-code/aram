@@ -28,7 +28,8 @@ import { StudentDashboardModal } from './components/dashboard/StudentDashboardMo
 import { FounderSection } from './components/academy/FounderSection';
 import { CyberMentorDrawer } from './components/ai/CyberMentorDrawer';
 import { Footer } from './components/Footer';
-import { syncUserProfileToFirestore } from './lib/firebase';
+import { auth, syncUserProfileToFirestore } from './lib/firebase';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('tracks');
@@ -51,7 +52,8 @@ export default function App() {
     const saved = localStorage.getItem('kaya_visitor_user');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved) as VisitorUser;
+        return parsed.id?.startsWith('guest-') ? parsed : null;
       } catch {
         return null;
       }
@@ -74,13 +76,9 @@ export default function App() {
     return INITIAL_COURSES;
   });
 
-  // Owner/Admin authentication state (hasanxlo101@gmail.com)
-  const [isAdmin, setIsAdmin] = useState<boolean>(() => {
-    return localStorage.getItem('kaya_admin_authenticated') === 'true';
-  });
-  const [adminEmail, setAdminEmail] = useState<string>(() => {
-    return localStorage.getItem('kaya_admin_email') || 'hasanxlo101@gmail.com';
-  });
+  // Admin status is derived from Firebase Authentication, never from editable browser storage.
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminEmail, setAdminEmail] = useState('');
 
   // Student progress & Gamification
   const [completedLessons, setCompletedLessons] = useState<string[]>(() => {
@@ -106,6 +104,37 @@ export default function App() {
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
   const [isAdminDashboardOpen, setIsAdminDashboardOpen] = useState(false);
 
+  useEffect(() => {
+    return onAuthStateChanged(auth, (user) => {
+      const email = user?.email?.toLowerCase() || '';
+      const allowedAdmins = ['hasan.xlo101@gmail.com'];
+      const authorized = Boolean(user && user.emailVerified && allowedAdmins.includes(email));
+      setIsAdmin(authorized);
+      setAdminEmail(authorized ? email : '');
+      if (!authorized) setIsAdminDashboardOpen(false);
+    });
+  }, []);
+
+  useEffect(() => {
+    return onAuthStateChanged(auth, (user) => {
+      const email = user?.email?.toLowerCase() || '';
+      const adminEmails = ['hasan.xlo101@gmail.com'];
+      // An administrator session must not also become a student session.
+      if (user && user.emailVerified && email && !adminEmails.includes(email)) {
+        setVisitorUser({
+          id: user.uid,
+          name: user.displayName || email.split('@')[0],
+          email,
+          joinedDate: new Date(user.metadata.creationTime || Date.now()).toISOString().slice(0, 10),
+          enrolledCourseIds: ['word-beg-01', 'word-beg-02'],
+        });
+      } else {
+        setVisitorUser((current) => current?.id.startsWith('guest-') ? current : null);
+      }
+    });
+  }, []);
+
+
   // Sync state with localStorage
   useEffect(() => {
     localStorage.setItem('kaya_academy_courses', JSON.stringify(courses));
@@ -129,9 +158,15 @@ export default function App() {
 
   const handleVisitorLoginSuccess = (user: VisitorUser) => {
     setVisitorUser(user);
-    const updatedXp = xpPoints + 50;
-    setXpPoints(updatedXp);
-    syncUserProfileToFirestore(user, updatedXp, completedLessons).catch((err) =>
+    // Welcome bonus is granted once per browser, not on every login.
+    const bonusKey = 'kaya_welcome_bonus_granted';
+    const firstLogin = localStorage.getItem(bonusKey) !== '1';
+    const updatedXp = firstLogin ? xpPoints + 50 : xpPoints;
+    if (firstLogin) {
+      localStorage.setItem(bonusKey, '1');
+      setXpPoints(updatedXp);
+    }
+    if (!user.id.startsWith('guest-')) syncUserProfileToFirestore(user, updatedXp, completedLessons).catch((err) =>
       console.warn('Firebase profile sync:', err)
     );
     setActiveTab('student-dashboard');
@@ -139,33 +174,35 @@ export default function App() {
 
   const handleVisitorLogout = () => {
     setVisitorUser(null);
+    if (visitorUser && !visitorUser.id.startsWith('guest-')) void signOut(auth).catch((err) => console.error('Student sign-out failed:', err));
     if (activeTab === 'student-dashboard') {
       setActiveTab('tracks');
     }
   };
 
   const handleAdminLoginSuccess = (email: string) => {
-    setIsAdmin(true);
+    // The modal has already authenticated with Firebase; the auth observer is authoritative.
     setAdminEmail(email);
-    localStorage.setItem('kaya_admin_authenticated', 'true');
-    localStorage.setItem('kaya_admin_email', email);
     setIsAdminDashboardOpen(true);
   };
 
   const handleAdminLogout = () => {
+    setIsAdminDashboardOpen(false);
+    void signOut(auth).catch((error) => console.error('Admin sign-out failed:', error));
     setIsAdmin(false);
-    localStorage.removeItem('kaya_admin_authenticated');
+    setAdminEmail('');
   };
 
   const handleToggleLessonComplete = (lessonKey: string) => {
     if (completedLessons.includes(lessonKey)) {
       setCompletedLessons(completedLessons.filter((k) => k !== lessonKey));
+      setXpPoints(Math.max(0, xpPoints - 25));
     } else {
       const updated = [...completedLessons, lessonKey];
       setCompletedLessons(updated);
       const updatedXp = xpPoints + 25;
       setXpPoints(updatedXp);
-      if (visitorUser) {
+      if (visitorUser && !visitorUser.id.startsWith('guest-')) {
         syncUserProfileToFirestore(visitorUser, updatedXp, updated).catch((err) =>
           console.warn('Firebase sync:', err)
         );
@@ -176,7 +213,7 @@ export default function App() {
   const handleAwardLabXp = (xp: number) => {
     const updatedXp = xpPoints + xp;
     setXpPoints(updatedXp);
-    if (visitorUser) {
+    if (visitorUser && !visitorUser.id.startsWith('guest-')) {
       syncUserProfileToFirestore(visitorUser, updatedXp, completedLessons).catch((err) =>
         console.warn('Firebase sync:', err)
       );
@@ -193,35 +230,31 @@ export default function App() {
     setSelectedLesson(lesson);
   };
 
-  const handleLaunchCapstone = (trackId: string) => {
-    setActiveTab('projects');
-    const el = document.getElementById('projects-section');
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  // Switch tab, then scroll once the new tab's content has rendered.
+  const goToTab = (tab: string) => {
+    setActiveTab(tab);
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() =>
+        document.getElementById('tab-content')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      )
+    );
   };
 
-  const handleLaunchLabFromLesson = (labId: string) => {
-    setActiveTab('labs');
-    const el = document.getElementById('labs-section');
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  const closeLessonViewer = () => {
+    setSelectedLesson(null);
+    setSelectedLessonTrack(null);
   };
 
-  const scrollToTracks = () => {
-    setActiveTab('tracks');
-    const el = document.getElementById('professional-tracks');
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  const handleLaunchCapstone = () => goToTab('projects');
+
+  const handleLaunchLabFromLesson = () => {
+    closeLessonViewer();
+    goToTab('labs');
   };
 
-  const scrollToWordCourses = () => {
-    setActiveTab('word-courses');
-    const el = document.getElementById('word-courses-section');
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const scrollToLabs = () => {
-    setActiveTab('labs');
-    const el = document.getElementById('labs-section');
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
-  };
+  const scrollToTracks = () => goToTab('tracks');
+  const scrollToWordCourses = () => goToTab('word-courses');
+  const scrollToLabs = () => goToTab('labs');
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-cyan-500/20 selection:text-cyan-300">
@@ -254,7 +287,7 @@ export default function App() {
         />
 
         {/* Viewport Content */}
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 sm:py-12 space-y-12">
+        <div id="tab-content" className="mx-auto max-w-7xl px-4 sm:px-6 py-8 sm:py-12 space-y-12 scroll-mt-20">
           {/* Active Tab: Student Dashboard */}
           {activeTab === 'student-dashboard' && (
             <StudentDashboard
@@ -424,7 +457,7 @@ export default function App() {
         course={selectedCourse}
         isOpen={Boolean(selectedCourse)}
         onClose={() => setSelectedCourse(null)}
-        onLaunchLab={() => scrollToLabs()}
+        onLaunchLab={() => { setSelectedCourse(null); scrollToLabs(); }}
         onGenerateCertificate={(c) => setCourseForCert(c)}
         completedLessons={completedLessons}
         onToggleLessonComplete={handleToggleLessonComplete}
@@ -437,7 +470,7 @@ export default function App() {
         onClose={() => setCourseForCert(null)}
       />
 
-      {/* Admin Login Modal (Restricted to hasanxlo101@gmail.com) */}
+      {/* Admin Login Modal (Restricted to hasan.xlo101@gmail.com) */}
       <AdminLoginModal
         isOpen={isAdminLoginOpen}
         onClose={() => setIsAdminLoginOpen(false)}

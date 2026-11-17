@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { createUserWithEmailAndPassword, sendEmailVerification, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
+import { auth } from '../../lib/firebase';
 import { X, User, Mail, Lock, CheckCircle2, ArrowRight, ShieldCheck } from 'lucide-react';
 import { VisitorUser } from '../../types/wordCourses';
 
@@ -18,26 +20,59 @@ export const VisitorAuthModal: React.FC<VisitorAuthModalProps> = ({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [feedback, setFeedback] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password.trim()) {
-      setFeedback('يرجى ملء جميع الحقول المطلوبة.');
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail || !password || (mode === 'signup' && password.length < 8)) {
+      setFeedback(mode === 'signup'
+        ? 'أدخل بريدًا صالحًا وكلمة مرور من 8 أحرف على الأقل.'
+        : 'يرجى إدخال البريد الإلكتروني وكلمة المرور.');
       return;
     }
 
-    const visitor: VisitorUser = {
-      id: `visitor-${Date.now()}`,
-      name: name.trim() || email.split('@')[0],
-      email: email.trim(),
-      joinedDate: new Date().toISOString().split('T')[0],
-      enrolledCourseIds: ['word-beg-01', 'word-beg-02'],
-    };
+    setIsSubmitting(true);
+    setFeedback('');
+    try {
+      if (mode === 'signup') {
+        const credential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
+        if (name.trim()) await updateProfile(credential.user, { displayName: name.trim() });
+        await sendEmailVerification(credential.user);
+        await signOut(auth);
+        setFeedback('أُنشئ الحساب. تحقق من بريدك الإلكتروني ثم سجّل الدخول بعد تأكيده.');
+        return;
+      }
 
-    onLoginSuccess(visitor);
-    onClose();
+      const credential = await signInWithEmailAndPassword(auth, cleanEmail, password);
+      if (!credential.user.emailVerified) {
+        await signOut(auth);
+        setFeedback('يرجى تأكيد بريدك الإلكتروني أولًا، ثم سجّل الدخول مجددًا. إذا لم تصلك رسالة التحقق فتواصل مع الدعم.');
+        return;
+      }
+      const visitor: VisitorUser = {
+        id: credential.user.uid,
+        name: credential.user.displayName || cleanEmail.split('@')[0],
+        email: cleanEmail,
+        joinedDate: new Date(credential.user.metadata.creationTime || Date.now()).toISOString().slice(0, 10),
+        enrolledCourseIds: ['word-beg-01', 'word-beg-02'],
+      };
+      onLoginSuccess(visitor);
+      onClose();
+    } catch (error) {
+      const code = error && typeof error === 'object' && 'code' in error ? String(error.code) : '';
+      setFeedback(code.includes('email-already-in-use')
+        ? 'هذا البريد مسجل مسبقًا. اختر تسجيل الدخول.'
+        : code.includes('invalid-credential') || code.includes('wrong-password') || code.includes('user-not-found')
+        ? 'البريد الإلكتروني أو كلمة المرور غير صحيحين.'
+        : code.includes('weak-password')
+        ? 'كلمة المرور ضعيفة؛ استخدم 8 أحرف على الأقل.'
+        : 'تعذر إتمام العملية. تحقق من اتصال الشبكة وإعدادات Firebase Authentication.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleGuestLogin = () => {
@@ -115,6 +150,7 @@ export const VisitorAuthModal: React.FC<VisitorAuthModalProps> = ({
               <input
                 type="text"
                 value={name}
+                autoComplete="name"
                 onChange={(e) => setName(e.target.value)}
                 placeholder="أدخل اسمك للمتابعة والشهادات..."
                 className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
@@ -127,6 +163,8 @@ export const VisitorAuthModal: React.FC<VisitorAuthModalProps> = ({
             <input
               type="email"
               value={email}
+              required
+              autoComplete="email"
               onChange={(e) => setEmail(e.target.value)}
               placeholder="student@example.com"
               dir="ltr"
@@ -139,6 +177,9 @@ export const VisitorAuthModal: React.FC<VisitorAuthModalProps> = ({
             <input
               type="password"
               value={password}
+              required
+              minLength={mode === 'signup' ? 8 : undefined}
+              autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••••••"
               dir="ltr"
@@ -154,9 +195,10 @@ export const VisitorAuthModal: React.FC<VisitorAuthModalProps> = ({
 
           <button
             type="submit"
+            disabled={isSubmitting}
             className="w-full py-2.5 rounded-lg bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-bold text-xs transition-colors cursor-pointer shadow-lg shadow-emerald-500/10"
           >
-            {mode === 'login' ? 'دخول المنصة وتصفح ملفات Word' : 'إنشاء الحساب وبدء التعلم'}
+            {isSubmitting ? 'جارٍ التحقق…' : mode === 'login' ? 'دخول المنصة وتصفح ملفات Word' : 'إنشاء الحساب وبدء التعلم'}
           </button>
         </form>
 
