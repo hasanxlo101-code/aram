@@ -35,6 +35,7 @@ export const DocumentsLibrary: React.FC<DocumentsLibraryProps> = ({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [downloadedDocIds, setDownloadedDocIds] = useState<string[]>([]);
+  const [downloadError, setDownloadError] = useState<string>('');
 
   const filteredDocs = DOWNLOADABLE_DOCS.filter((doc) => {
     if (selectedCategory !== 'all' && doc.category !== selectedCategory) return false;
@@ -48,19 +49,30 @@ export const DocumentsLibrary: React.FC<DocumentsLibraryProps> = ({
     return true;
   });
 
-  const handleDownloadFile = (docId: string, title: string, format: string) => {
-    const dummyContent = `KAyA Safe&Sec Academy - Official Document\nDocument Title: ${title}\nCategory: Technical Cybersecurity Guide\nGenerated for enrolled students.\nVerified Signature: KAYA-SEC-DOC-HASH-${Math.floor(100000 + Math.random() * 900000)}`;
-    const blob = new Blob([dummyContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${title.replace(/[^a-zA-Z0-9\u0600-\u06FF]/g, '_')}.${format.toLowerCase()}`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+  const handleDownloadFile = (docId: string, title: string, fileUrl?: string) => {
+    setDownloadError('');
+    if (!fileUrl) {
+      setDownloadError(`الملف الأصلي «${title}» غير مرفق حاليًا. لم يتم إنشاء ملف بديل مضلل.`);
+      return;
+    }
 
-    setDownloadedDocIds(prev => [...prev, docId]);
+    // Only allow same-origin paths or HTTPS URLs explicitly supplied by the trusted document catalogue.
+    try {
+      const target = new URL(fileUrl, window.location.origin);
+      if (target.protocol !== 'https:' && target.origin !== window.location.origin) {
+        throw new Error('Unsupported download origin');
+      }
+      const link = document.createElement('a');
+      link.href = target.href;
+      link.download = '';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setDownloadedDocIds((prev) => prev.includes(docId) ? prev : [...prev, docId]);
+    } catch {
+      setDownloadError('تعذر بدء التنزيل بسبب رابط ملف غير صالح.');
+    }
   };
 
   return (
@@ -151,6 +163,12 @@ export const DocumentsLibrary: React.FC<DocumentsLibraryProps> = ({
             </div>
           </div>
 
+          {downloadError && (
+            <div role="status" aria-live="polite" className="rounded-xl border border-amber-500/30 bg-amber-950/30 px-4 py-3 text-sm text-amber-200">
+              {downloadError}
+            </div>
+          )}
+
           {/* Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredDocs.map((doc) => {
@@ -166,7 +184,7 @@ export const DocumentsLibrary: React.FC<DocumentsLibraryProps> = ({
                         {doc.category}
                       </span>
                       <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400">
-                        {doc.format} · {doc.size}
+                        {doc.format}{doc.size ? ` · ${doc.size}` : ''}
                       </span>
                     </div>
 
@@ -189,12 +207,14 @@ export const DocumentsLibrary: React.FC<DocumentsLibraryProps> = ({
 
                   <div className="pt-3 border-t border-slate-850 flex items-center justify-between">
                     <span className="text-[11px] text-slate-400">
-                      {doc.downloadsCount.toLocaleString()} تنزيل
+                      {doc.fileUrl ? 'ملف Markdown حقيقي' : 'غير مرفق'}
                     </span>
 
                     <button
-                      onClick={() => handleDownloadFile(doc.id, doc.title, doc.format)}
-                      className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition ${
+                      onClick={() => handleDownloadFile(doc.id, doc.title, doc.fileUrl)}
+                      disabled={!doc.fileUrl}
+                      aria-label={doc.fileUrl ? `تنزيل ${doc.title}` : `الملف غير متاح: ${doc.title}`}
+                      className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-50 ${
                         isDownloaded
                           ? 'bg-emerald-600/20 text-emerald-300 border border-emerald-500/30'
                           : 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-md shadow-cyan-500/10'
@@ -208,7 +228,7 @@ export const DocumentsLibrary: React.FC<DocumentsLibraryProps> = ({
                       ) : (
                         <>
                           <Download className="w-3.5 h-3.5" />
-                          <span>تنزيل المستند</span>
+                          <span>{doc.fileUrl ? 'تنزيل المستند' : 'الملف غير متاح'}</span>
                         </>
                       )}
                     </button>
@@ -315,13 +335,13 @@ export const DocumentsLibrary: React.FC<DocumentsLibraryProps> = ({
                 </a>
 
                 <a
-                  href="https://github.com/aramkaya295-cyber/"
+                  href="https://github.com/aramkaya295/cyber-kayasafesec"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium text-xs border border-slate-700 transition cursor-pointer"
                 >
                   <ExternalLink className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>حساب ومستودع GitHub الرسمي (@aramkaya295-cyber)</span>
+                  <span>مستودع المشروع على GitHub</span>
                 </a>
               </div>
             </div>

@@ -192,30 +192,10 @@ export const Header: React.FC<HeaderProps> = ({
                       )}
                     </button>
                   </div>
-
-                  {/* GitHub Official Account */}
-                  <a
-                    href="https://github.com/aramkaya295-cyber/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 rounded-lg bg-slate-900/60 border border-slate-800 hover:border-purple-500/30 flex items-center justify-between gap-2 transition-colors cursor-pointer"
-                    title="زيارة حساب GitHub الرسمي"
-                  >
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1 text-[10px] font-semibold text-purple-400">
-                        <span className="h-1.5 w-1.5 rounded-full bg-purple-400"></span>
-                        مستودع الكود (GitHub)
-                      </div>
-                      <div className="font-mono text-slate-300 text-[11px] truncate" dir="ltr">
-                        github.com/aramkaya295-cyber
-                      </div>
-                    </div>
-                    <ExternalLink className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                  </a>
                 </div>
 
                 <div className="mt-2.5 pt-2 border-t border-slate-900 text-[10px] text-slate-400 text-center">
-                  روابط مباشرة ومعتمدة لمنظومة KAyA Safe&Sec
+                  روابط مباشرة ومعتمدة للمنصة
                 </div>
               </div>
             )}

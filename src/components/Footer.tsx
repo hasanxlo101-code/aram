@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Lock, Award, Mail, Code2 } from 'lucide-react';
+import { Shield, Lock, Award, Mail } from 'lucide-react';
 
 interface FooterProps {
   onSelectTab: (tab: string) => void;
@@ -45,16 +45,6 @@ export const Footer: React.FC<FooterProps> = ({
             >
               <Award className="h-3 w-3 text-emerald-400" />
               الأكاديمي: tinyurl.com/kaya-academy
-            </a>
-            <a 
-              href="https://github.com/aramkaya295-cyber/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-purple-950/40 border border-purple-500/30 text-purple-300 font-mono text-[11px] hover:border-purple-400 transition-colors"
-              title="مستودع الكود المصدري على GitHub"
-            >
-              <Code2 className="h-3 w-3 text-purple-400" />
-              GitHub: aramkaya295-cyber
             </a>
           </div>
         </div>

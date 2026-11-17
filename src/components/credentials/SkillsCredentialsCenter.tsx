@@ -53,7 +53,7 @@ export const SkillsCredentialsCenter: React.FC<SkillsCredentialsCenterProps> = (
   };
 
   const handleVerify = () => {
-    setVerificationFeedback(` تم التحقق بنجاح! القيد الأكاديمي [${credentialId}] مسجل رسمياً في قاعدة بيانات KAyA Safe&Sec بتاريخ ${new Date().toLocaleDateString('ar-EG')}`);
+    setVerificationFeedback('التحقق الرسمي غير متاح في هذه النسخة؛ لا يوجد سجل شهادات مركزي متصل. رقم المعاينة لا يثبت إصدار شهادة أو اعتمادها.');
     setTimeout(() => setVerificationFeedback(null), 6000);
   };
 
@@ -67,10 +67,10 @@ export const SkillsCredentialsCenter: React.FC<SkillsCredentialsCenterProps> = (
             <span>الاعتمادات ومصفوفة المهارات الرقمية</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
-            خريطة الكفاءات والشهادات الأكاديمية المعتمدة
+            خريطة الكفاءات ونماذج الشهادات
           </h2>
           <p className="text-slate-300 text-sm leading-relaxed">
-            قياس كمي دقيق لتطورك المهني في 6 مجالات أمنية رئيسية، مع توليد شهادات تخرج رقمية تحمل رقم تحقق أكاديمي فريد وبصمة استيثاق قابلة للمشاركة.
+            مؤشرات تعلم تقديرية ونماذج شهادات لأغراض المعاينة. لا تُعد أرقام المهارات أو المعرفات المعروضة إثباتًا مستقلًا للاعتماد أو التحقق.
           </p>
         </div>
       </div>

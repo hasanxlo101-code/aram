@@ -14,6 +14,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { WordCourse, CourseLevel } from '../../types/wordCourses';
+import { getCourseDocumentStats } from '../../utils/wordDocument';
 
 interface WordCoursesGridProps {
   courses: WordCourse[];
@@ -46,7 +47,7 @@ export const WordCoursesGrid: React.FC<WordCoursesGridProps> = ({
             مكتبة وثائق وكورسات Word التفاعلية
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl leading-relaxed">
-            15 مساراً تخصصياً موثقاً على هيئة ملفات Word تفاعلية (.docx) مقسمة لثلاثة مستويات: مبتدئ (مجاني عام ومفتوح للتصفح بالكامل)، متوسط وخبير (مدفوع مع إشعار أمني لبوابة الدفع).
+            15 مساراً تدريبياً بمحتوى قابل للتصفح والتنزيل بصيغة Word (.docx)، مقسمة إلى ثلاثة مستويات: مبتدئ (مجاني عام ومفتوح للتصفح بالكامل)، متوسط وخبير (مدفوع مع إشعار أمني لبوابة الدفع).
           </p>
         </div>
 
@@ -170,9 +171,9 @@ export const WordCoursesGrid: React.FC<WordCoursesGridProps> = ({
                     <span className="text-emerald-400 shrink-0 font-bold ms-2">DOCX</span>
                   </div>
                   <div className="flex items-center justify-between text-slate-500 pt-1 border-t border-slate-800/80">
-                    <span>{course.docMeta.pages} صفحة A4</span>
+                    <span>{getCourseDocumentStats(course).pages} صفحة تقريبية</span>
                     <span>{course.hours} ساعة تدريب</span>
-                    <span>{course.docMeta.fileSize}</span>
+                    <span>حجم يتحدد عند التحميل</span>
                   </div>
                 </div>
 
